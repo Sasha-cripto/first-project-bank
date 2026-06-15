@@ -1,8 +1,13 @@
 import java.util.Scanner;
 
+import model.Client;
+import service.BankService;
+
+
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        BankService bankService = new BankService();
         int approvedCount = 0;
         int deniedCount = 0;
         int bankVault = 1000000;
@@ -71,8 +76,9 @@ public class Main {
                         System.out.print("Неверная категория. Введите М, Б или В: ");
                         category = scanner.next().toUpperCase();
                     }
-                    String resalt1 = formatName(name);
-                    String resalt = checkLoanApproval(age, averageIncome, creditScore, category);
+                    String resalt1 = bankService.formatName(name);
+                    Client client = new Client(1, resalt1, age, averageIncome, creditScore, category);
+                    String resalt = bankService.checkLoanApproval(client);
                     System.out.println("Уважаемый " + resalt1 + " статус вашего кредита " + resalt);
                     if (resalt.startsWith("ОДОБРЕНО")) {
                         System.out.print("Введите желаемую сумму кредита: ");
@@ -97,7 +103,7 @@ public class Main {
                         }
                         int month = scanner.nextInt();
                         scanner.nextLine();
-                        calculateLoanDetails(loanAmount, month, category);
+                        bankService.calculateLoanDetails(loanAmount, month, category);
                         bankVault -= loanAmount;
                         approvedCount++;
                         if (clientIndex < 3) {
@@ -136,57 +142,5 @@ public class Main {
                 }
             }
         }
-    }
-
-    public static String checkLoanApproval(int age, int income, int creditScore, String category) {
-        switch (category) {
-            case "В" -> {
-                return "ОДОБРЕНО";
-            }
-            case "Б" -> {
-                if (income > 50000)
-                    return "ОДОБРЕНО";
-                else return "ОТКАЗАНО, доход менее 50000 руб.";
-            }
-            case "М" -> {
-                if (age < 21) {
-                    return "ОТКАЗАНО, возраст менее 21 года";
-                }
-                if (income < 30000) {
-                    return "ОТКАЗАНО, доход менее 30000 руб";
-                }
-                if (creditScore == 5) {
-                    return "ОДОБРЕНО";
-                }
-                if (creditScore >= 3 && creditScore <= 4 && income > 70000) {
-                    return "ОДОБРЕНО";
-                }
-                return "ОТКАЗАНО, низкий доход или низкая категория";
-            }
-        }
-        return "Ошибка";
-    }
-
-    public static String formatName(String name) {
-        String firstLatter = name.substring(0, 1).toUpperCase();
-        String restOfName = name.substring(1).toLowerCase();
-        return firstLatter + restOfName;
-    }
-
-    public static void calculateLoanDetails(int loanAmount, int month, String category) {
-        int annualRate = switch (category) {
-            case "В" -> 10;
-            case "Б" -> 15;
-            default -> 20;
-        };
-        int overpayment = loanAmount * annualRate / 100;
-        int totalToPay = loanAmount + overpayment;
-        int monthlyPayament = totalToPay / month;
-        System.out.println("\n==== РАСЧЕТ КРЕДИТА ====");
-        System.out.println("Ваша годовая ставка " + annualRate);
-        System.out.println("Ежемесячный платеж " + monthlyPayament);
-        System.out.println("Общая переплата " + overpayment);
-        System.out.println("Всего к возврату в банк " + totalToPay);
-
     }
 }
