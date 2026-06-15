@@ -9,8 +9,7 @@ public class Main {
         String[] lastClient = new String[3];
         int clientIndex = 0;
         while (true) {
-            System.out.println("\n ==== Главное менюменю банка ====");
-            if ()
+            System.out.println("\n ==== Главное меню банка ====");
             System.out.println("1. Оформить новую заявку на кредит");
             System.out.println("2. Посмотреть статистику смены");
             System.out.println("3. Завершить смену");
