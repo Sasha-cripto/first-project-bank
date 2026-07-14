@@ -1,19 +1,20 @@
 package service;
 
 import model.Client;
-
+import model.ClientCategory;
+import model.InsufficientFundsException;
 public class BankService {
     public static String checkLoanApproval(Client client) {
         switch (client.getCategory()) {
-            case "В" -> {
+            case V -> {
                 return "ОДОБРЕНО";
             }
-            case "Б" -> {
+            case B -> {
                 if (client.getAverageIncome() > 50000)
                     return "ОДОБРЕНО";
                 else return "ОТКАЗАНО, доход менее 50000 руб.";
             }
-            case "М" -> {
+            case M -> {
                 if (client.getAge() < 21) {
                     return "ОТКАЗАНО, возраст менее 21 года";
                 }
@@ -38,12 +39,11 @@ public class BankService {
         return firstLatter + restOfName;
     }
 
-    public static void calculateLoanDetails(int loanAmount, int month, String category) {
-        int annualRate = switch (category) {
-            case "В" -> 10;
-            case "Б" -> 15;
-            default -> 20;
-        };
+    public static void calculateLoanDetails(int loanAmount, int month, ClientCategory category, int bankVault) throws InsufficientFundsException {
+        if (loanAmount > bankVault) {
+            throw new InsufficientFundsException("В кассе банка недостаточно средств!");
+        }
+        int annualRate = category.getAnnualRate();
         int overpayment = loanAmount * annualRate / 100;
         int totalToPay = loanAmount + overpayment;
         int monthlyPayament = totalToPay / month;
@@ -52,7 +52,6 @@ public class BankService {
         System.out.println("Ежемесячный платеж " + monthlyPayament);
         System.out.println("Общая переплата " + overpayment);
         System.out.println("Всего к возврату в банк " + totalToPay);
-
     }
 }
 

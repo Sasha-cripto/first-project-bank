@@ -1,8 +1,10 @@
 import java.util.Scanner;
-
+import java.util.List;
+import java.util.ArrayList;
 import model.Client;
+import model.ClientCategory;
 import service.BankService;
-
+import model.InsufficientFundsException;
 
 public class Main {
     public static void main(String[] args) {
@@ -11,14 +13,13 @@ public class Main {
         int approvedCount = 0;
         int deniedCount = 0;
         int bankVault = 1000000;
-        String[] lastClient = new String[3];
-        int clientIndex = 0;
+List <Client> approvedClient = new ArrayList<>();
         while (true) {
             System.out.println("\n ==== Главное меню банка ====");
             System.out.println("1. Оформить новую заявку на кредит");
             System.out.println("2. Посмотреть статистику смены");
             System.out.println("3. Завершить смену");
-            System.out.print("4. Выберите действие: ");
+            System.out.print("Выберите действие: ");
             while (!scanner.hasNextInt()) {
                 System.out.println("Ошибка. Введите правильное действие!");
                 scanner.nextLine();
@@ -70,14 +71,15 @@ public class Main {
                         deniedCount++;
                         continue;
                     }
-                    System.out.print("Введите катигорию клиента (М, Б, В): ");
+                    System.out.print("Введите катигорию клиента (M, B, V): ");
                     String category = scanner.next().toUpperCase();
-                    while (!"МБВ".contains(category)) {
-                        System.out.print("Неверная категория. Введите М, Б или В: ");
+                    while (!"MBV".contains(category)) {
+                        System.out.print("Неверная категория. Введите M, B или V: ");
                         category = scanner.next().toUpperCase();
                     }
                     String resalt1 = bankService.formatName(name);
-                    Client client = new Client(1, resalt1, age, averageIncome, creditScore, category);
+                    ClientCategory clientCategory = ClientCategory.valueOf(category);
+                    Client client = new Client(1, resalt1, age, averageIncome, creditScore, clientCategory);
                     String resalt = bankService.checkLoanApproval(client);
                     System.out.println("Уважаемый " + resalt1 + " статус вашего кредита " + resalt);
                     if (resalt.startsWith("ОДОБРЕНО")) {
@@ -103,28 +105,31 @@ public class Main {
                         }
                         int month = scanner.nextInt();
                         scanner.nextLine();
-                        bankService.calculateLoanDetails(loanAmount, month, category);
-                        bankVault -= loanAmount;
-                        approvedCount++;
-                        if (clientIndex < 3) {
-                            lastClient[clientIndex] = resalt1;
-                            clientIndex++;
-                        } else {
-                            lastClient[0] = lastClient[1];
-                            lastClient[1] = lastClient[2];
-                            lastClient[2] = resalt1;
-                        }
-                        System.out.println("Кредит успешно выдан, остаток в банке " + bankVault);
-                    } else deniedCount++;
+                        try {
+                            // Вызываем метод и передаем в него переменную bankVault четвертым параметром
+                            bankService.calculateLoanDetails(loanAmount, month, clientCategory, bankVault);
 
+                            // Если метод выше НЕ выбросил ошибку — выполняем успешный сценарий:
+                            bankVault -= loanAmount;
+                            approvedCount++;
+                            approvedClient.add(client);
+                            System.out.println("Кредит успешно выдан, остаток в банке " + bankVault);
+
+                        } catch (InsufficientFundsException e) {
+                            // Сработает, только если в кассе было мало денег
+                            System.out.println("Ошибка банка: " + e.getMessage());
+                            deniedCount++;
+                        }
+                    }
                 }
                 case 2 -> {
                     System.out.println("\n==== Текущая статистика ====");
                     System.out.println("Одобрено " + approvedCount);
                     System.out.println("Отказано " + deniedCount);
                     System.out.println("Последние одобренные клиенты: ");
-                    for (int i = 0; i < clientIndex; i++) {
-                        System.out.println((i + 1) + lastClient[i]);
+                    for (int i = 0; i < approvedClient.size(); i++) {
+                        Client c = approvedClient.get(i);
+                        System.out.println((i + 1) + ". " + c.getName() + "(Категория: " + c.getCategory() + ")");
                     }
                 }
                 case 3 -> {
@@ -132,8 +137,9 @@ public class Main {
                     System.out.println("Одобрено: " + approvedCount);
                     System.out.println("Отказано: " + deniedCount);
                     System.out.println("Последние одобренные клиенты: ");
-                    for (int i = 0; i < clientIndex; i++) {
-                        System.out.println((i + 1) + lastClient[i]);
+                    for (int i = 0; i < approvedClient.size(); i++) {
+                        Client c = approvedClient.get(i);
+                        System.out.println((i + 1) + ". " + c.getName() + "(Категория: " + c.getCategory() + ")");
                     }
                     return;
                 }

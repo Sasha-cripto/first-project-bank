@@ -6,9 +6,9 @@ public class Client {
     private int age;
     private int averageIncome;
     private int creditScore;
-    private String category;
+    private  ClientCategory category;
 
-    public Client(int id, String name, int age, int averageIncome, int creditScore, String category) {
+    public Client(int id, String name, int age, int averageIncome, int creditScore,  ClientCategory category) {
         this.id = id;
         this.name = name;
         this.age = age;
@@ -37,7 +37,7 @@ public class Client {
         return creditScore;
     }
 
-    public String getCategory() {
+    public ClientCategory getCategory() {
         return category;
     }
 }
